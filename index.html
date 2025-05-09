@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Estimation Log-Normal Graph</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Task Estimation Distribution</h1>
+        <p>Based on the principles from the blog post <a href="https://thesearesystems.substack.com/p/task-estimation-conquering-hofstadters">"Task estimation: Conquering Hofstadter's Law"</a>.</p>
+        <p>Enter your best estimate for the median completion time and select the unit:</p>
+
+        <div class="input-area">
+            <label for="medianEstimate">Median Estimate:</label>
+            <input type="number" id="medianEstimate" value="30" min="0.1" step="0.1">
+            <select id="unit">
+                <option value="minutes">Minutes</option>
+                <option value="hours">Hours</option>
+                <option value="days">Days</option>
+            </select>
+            <button id="generateGraph">Generate Graph</button>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="logNormalChart"></canvas>
+        </div>
+
+        <div class="info-area">
+            <h2>Understanding the graph</h2>
+            <p id="graphDescription">This graph shows the probability distribution of actual completion times, given your estimated median time in the selected unit.</p>
+            <ul>
+                <li>The peak of the curve is the mode (most likely time), which is less than the median.</li>
+                <li>The median is the point where 50% of tasks finish before and 50% finish after.</li>
+                <li>The mean (average) completion time is approximately 1.6 * m.</li>
+                <li>The long tail to the right shows that while finishing early is possible, finishing significantly late is much more likely than finishing significantly early.</li>
+                <li>The <strong>red line</strong> indicates the Median (P50) completion time.</li>
+                <li>The <strong>orange dotted line</strong> indicates the Mean (Average) completion time.</li>
+            </ul>
+             <p><strong>Key Percentiles:</strong></p>
+            <ul>
+                <li id="p50Value">P50 (Median): </li>
+                <li id="meanValue">Mean (Average): </li>
+                <li id="p75Value">P75: </li>
+                <li id="p90Value">P90: </li>
+                <li id="p99Value">P99: </li>
+            </ul>
+            <p>Choose the percentile that matches the required certainty for your communication (e.g., use the P99 value for a high-certainty commitment).</p>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 Bede Carroll</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

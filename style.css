@@ -1,0 +1,96 @@
+body {
+    font-family: sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Ensure footer stays at bottom */
+}
+
+.container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    background: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    flex-grow: 1; /* Allow container to take up available space */
+}
+
+h1, h2 {
+    color: #0056b3;
+    text-align: center;
+}
+
+.input-area {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #e9ecef;
+    border-radius: 5px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+}
+
+.input-area label {
+    font-weight: bold;
+}
+
+.input-area input[type="number"],
+.input-area select {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.input-area button {
+    padding: 8px 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 44px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+}
+
+.input-area button:hover {
+    background-color: #0056b3;
+}
+
+.chart-container {
+    position: relative;
+    height: 400px; /* Adjust height as needed */
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.info-area {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #f8f9fa;
+}
+
+.info-area ul {
+    list-style: disc;
+    margin-left: 20px;
+}
+
+.info-area li {
+    margin-bottom: 5px;
+}
+
+footer {
+    margin-top: 20px;
+    padding: 10px;
+    text-align: center; /* This centers the text */
+}
+
+footer p {
+    margin: 0;
+}
