@@ -11,11 +11,11 @@
 <body>
     <div class="container">
         <h1>Task Time Distribution</h1>
-        <p>Based on the principles from the blog post <a href="https://thesearesystems.substack.com/p/task-estimation-conquering-hofstadters">"Task estimation: Conquering Hofstadter's Law"</a>.</p>
-        <p>Enter your best estimate for the median completion time and select the unit:</p>
+        <p>Based on the principles from the blog post <a href="https://thesearesystems.substack.com/p/task-estimation-conquering-hofstadters">"Task estimation: Conquering Hofstadter's Law"</a>. (<a href="https://web.archive.org/web/20250507062941/https://thesearesystems.substack.com/p/task-estimation-conquering-hofstadters">Wayback Machine archive</a>)</p>
+        <p>Enter your best estimate for the median completion time (m) and select the unit:</p>
 
         <div class="input-area">
-            <label for="medianEstimate">Median Estimate:</label>
+            <label for="medianEstimate">Median Estimate (m):</label>
             <input type="number" id="medianEstimate" value="30" min="0.1" step="0.1">
             <select id="unit">
                 <option value="minutes">Minutes</option>
@@ -31,24 +31,40 @@
 
         <div class="info-area">
             <h2>Understanding the graph</h2>
-            <p id="graphDescription">This graph shows the probability distribution of actual completion times, given your estimated median time in the selected unit.</p>
+            <p id="graphDescription">This graph shows the probability distribution of actual completion times, given your estimated median time (m) in the selected unit.</p>
             <ul>
-                <li>The peak of the curve is the mode (most likely time), which is less than the median.</li>
-                <li>The median is the point where 50% of tasks finish before and 50% finish after.</li>
-                <li>The mean (average) completion time is approximately 1.6 * m.</li>
-                <li>The long tail to the right shows that while finishing early is possible, finishing significantly late is much more likely than finishing significantly early.</li>
-                <li>The <strong>red line</strong> indicates the Median (P50) completion time.</li>
-                <li>The <strong>orange dotted line</strong> indicates the Mean (Average) completion time.</li>
+                <li>The peak of the curve is the mode (most likely time), which is less than the median (mode = m * e<sup>-σ<sub>ln</sub>²</sup>, where σ<sub>ln</sub>=1 for the underlying normal distribution).</li>
+                <li>The median (m) is the point where 50% of tasks finish before and 50% finish after. This is your input estimate.</li>
+                <li>The mean (average) completion time is m * e<sup>σ<sub>ln</sub>²/2</sup> (approximately 1.65 * m, where σ<sub>ln</sub>=1 for the underlying normal distribution). The blog post often simplifies this to 1.6 * m.</li>
+                <li>The long tail to the right shows that while finishing somewhat early is possible, finishing significantly late is much more likely than finishing significantly early.</li>
+                <li>The <strong>red line</strong> on the graph indicates the Median (P50) completion time, which corresponds to your input estimate.</li>
             </ul>
-             <p><strong>Key Percentiles:</strong></p>
+
+            <p><strong>Key Percentiles & Values (based on blog post communication guidelines):</strong></p>
             <ul>
                 <li id="p50Value">P50 (Median): </li>
                 <li id="meanValue">Mean (Average): </li>
-                <li id="p75Value">P75: </li>
-                <li id="p90Value">P90: </li>
-                <li id="p99Value">P99: </li>
+                <li id="p80Value">P80 (m * 3): </li>
+                <li id="p90Value">P90 (m * 4): </li>
+                <li id="p95Value">P95 (m * 5): </li>
+                <li id="p99Value">P99 (m * 7): </li>
             </ul>
-            <p>Choose the percentile that matches the required certainty for your communication (e.g., use the P99 value for a high-certainty commitment).</p>
+            <p>
+                The P80-P99 values above use multipliers suggested by the blog post for communicating estimates with varying degrees of certainty.
+                Choose the value that matches the required certainty for your communication. For example:
+            </p>
+            <ul>
+                <li>When planning a sprint, the <strong>Mean (Average)</strong> might be most useful for averaging out over many tasks.</li>
+                <li>When providing a date to marketing or customers where a high degree of certainty is needed, the <strong>P95 (m * 5) or P99 (m * 7)</strong> values are more appropriate, as they represent a point by which the task is very likely to be complete.</li>
+            </ul>
+            <p>
+                Remember the blog's distinction: your initial estimate (the median) is often a developer's best *guess*; these higher percentiles help turn that guess into a more reliable *commitment* by accounting for the inherent uncertainty and long tail of task completion times.
+            </p>
+
+            <h3>A Note on Hofstadter's Law</h3>
+            <p>
+                This model helps quantify the uncertainty inherent in a single task estimate, assuming the scope is understood. However, always remember Hofstadter's Law: <em>"It always takes longer than you expect, even when you take into account Hofstadter's Law."</em> This tool provides a statistical framework for your current understanding, but unforeseen "scope discovery" or entirely new requirements can still extend timelines beyond these projections.
+            </p>
         </div>
     </div>
 

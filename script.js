@@ -7,23 +7,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Get percentile list item elements
     const p50Element = document.getElementById('p50Value');
-    const p75Element = document.getElementById('p75Value');
-    const p90Element = document.getElementById('p90Value');
-    const p99Element = document.getElementById('p99Value');
     const meanElement = document.getElementById('meanValue'); // Get the Mean list item element
+    const p80Element = document.getElementById('p80Value');
+    const p90Element = document.getElementById('p90Value');
+    const p95Element = document.getElementById('p95Value');
+    const p99Element = document.getElementById('p99Value');
 
 
     let logNormalChart; // Variable to hold the chart instance
 
-    // Constants derived from the blog post analysis
-    // sigma = sqrt(2 * ln(1.6))
-    const SIGMA = Math.sqrt(2 * Math.log(1.6));
+    // Sigma for the underlying normal distribution (ln(Time) ~ N(ln(m), SIGMA^2))
+    // Based on the blog post's "shape factor of 1" and mean = m * exp(1/2)
+    const SIGMA = 1.0;
 
-    // Z-scores for key percentiles (approximate values from standard normal distribution table)
-    const Z_50 = 0;
-    const Z_75 = 0.67449;
-    const Z_90 = 1.28155;
-    const Z_99 = 2.32635;
+    // Z-scores for key percentiles (from standard normal distribution table)
+    const Z_50 = 0; // Corresponds to the median
+    const Z_99 = 2.32635; // Standard Z-score for 99th percentile, used for graph x-axis limit
 
 
     // Function to convert input value to hours
@@ -68,28 +67,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Function to generate data points for the graph
-    // median is expected to be in the base unit (hours)
+    // medianInHours is expected to be in the base unit (hours)
     // targetUnit is the unit the user selected for display
     function generateGraphData(medianInHours, targetUnit) {
-        const mu = Math.log(medianInHours);
+        const mu = Math.log(medianInHours); // mu_ln = ln(median)
         const dataPoints = [];
         const numPoints = 200; // Number of points to plot
 
-        // Determine the range for the x-axis in HOURS. Clip to roughly the 99th percentile (P99).
-        const maxX_hours = medianInHours * Math.exp(SIGMA * Z_99); // m * exp(sigma * Z_0.99)
+        // Determine the range for the x-axis in HOURS.
+        // Extend to the true 99th percentile of the distribution with SIGMA=1
+        const maxX_hours = medianInHours * Math.exp(SIGMA * Z_99); // m * exp(1 * Z_0.99)
 
         // Start slightly above zero in HOURS to avoid issues with log(0) and division by zero
-        const startX_hours = Math.max(0.01, medianInHours * 0.001); // Start at 0.1 or 0.1% of median, whichever is larger
+        const startX_hours = Math.max(0.01, medianInHours * 0.001);
 
         for (let i = 0; i < numPoints; i++) {
-            // Calculate the time point in HOURS
             const x_hours = startX_hours + (maxX_hours - startX_hours) * (i / (numPoints - 1));
-            // Calculate the PDF value (density) using the value in HOURS
             const y = logNormalPDF(x_hours, mu, SIGMA);
-
-            // Convert the time point to the target display unit for the chart data
             const x_unit = convertFromHours(x_hours, targetUnit);
-
             dataPoints.push({ x: x_unit, y: y });
         }
         return dataPoints;
@@ -99,49 +94,49 @@ document.addEventListener('DOMContentLoaded', () => {
     // medianInHours is the median value in the base unit (hours)
     // inputMedian and inputUnit are the values entered by the user for display purposes
     function drawChart(dataPoints, medianInHours, inputMedian, inputUnit) {
-        const meanInHours = medianInHours * 1.6;
+        // Calculate mean based on SIGMA=1: mean = median * exp(SIGMA^2 / 2)
+        const meanInHours = medianInHours * Math.exp(SIGMA * SIGMA / 2); // m * exp(0.5)
 
-        // Destroy existing chart if it exists
         if (logNormalChart) {
             logNormalChart.destroy();
         }
 
-        // Update the description text
-        graphDescription.innerHTML = `This graph shows the probability distribution of actual completion times in <strong>${inputUnit.toLowerCase()}</strong>, given your estimated median time (m) in the selected unit.`;
+        // Percentile calculations based on blog post's communication guidelines
+        const p50InHours = medianInHours; // P50 is the median
+        const p80InHours = medianInHours * 3;   // P80 = m * 3
+        const p90InHours = medianInHours * 4;   // P90 = m * 4
+        const p95InHours = medianInHours * 5;   // P95 = m * 5
+        const p99InHours = medianInHours * 7;   // P99 = m * 7 (communication guideline)
 
-        // Calculate percentile values in hours using the log-normal formula: exp(mu + sigma * Z_p)
-        // Since mu = ln(medianInHours), this is medianInHours * exp(sigma * Z_p)
-        const p50InHours = medianInHours * Math.exp(SIGMA * Z_50);
-        const p75InHours = medianInHours * Math.exp(SIGMA * Z_75);
-        const p90InHours = medianInHours * Math.exp(SIGMA * Z_90);
-        const p99InHours = medianInHours * Math.exp(SIGMA * Z_99);
 
         // Convert percentile values and mean to the selected input unit
         const p50InUnit = convertFromHours(p50InHours, inputUnit);
-        const p75InUnit = convertFromHours(p75InHours, inputUnit);
+        const meanInUnit = convertFromHours(meanInHours, inputUnit);
+        const p80InUnit = convertFromHours(p80InHours, inputUnit);
         const p90InUnit = convertFromHours(p90InHours, inputUnit);
+        const p95InUnit = convertFromHours(p95InHours, inputUnit);
         const p99InUnit = convertFromHours(p99InHours, inputUnit);
-        const meanInUnit = convertFromHours(meanInHours, inputUnit); // Convert mean to selected unit
 
         // Update the percentile list items with calculated values
         p50Element.innerHTML = `P50 (Median): ${p50InUnit.toFixed(2)} ${inputUnit.toLowerCase()}`;
-        p75Element.innerHTML = `P75: ${p75InUnit.toFixed(2)} ${inputUnit.toLowerCase()}`;
-        p90Element.innerHTML = `P90: ${p90InUnit.toFixed(2)} ${inputUnit.toLowerCase()}`;
-        p99Element.innerHTML = `P99: ${p99InUnit.toFixed(2)} ${inputUnit.toLowerCase()}`;
-        meanElement.innerHTML = `Mean (Average): ${meanInUnit.toFixed(2)} ${inputUnit.toLowerCase()}`; // Update Mean list item
+        meanElement.innerHTML = `Mean (Average): ${meanInUnit.toFixed(2)} ${inputUnit.toLowerCase()} (≈${(meanInHours/medianInHours).toFixed(2)} * m)`;
+        p80Element.innerHTML = `P80: ${p80InUnit.toFixed(2)} ${inputUnit.toLowerCase()} (m * 3)`;
+        p90Element.innerHTML = `P90: ${p90InUnit.toFixed(2)} ${inputUnit.toLowerCase()} (m * 4)`;
+        p95Element.innerHTML = `P95: ${p95InUnit.toFixed(2)} ${inputUnit.toLowerCase()} (m * 5)`;
+        p99Element.innerHTML = `P99: ${p99InUnit.toFixed(2)} ${inputUnit.toLowerCase()} (m * 7)`;
 
 
         logNormalChart = new Chart(ctx, {
             type: 'line',
             data: {
                 datasets: [{
-                    label: `Probability Density (Median = ${inputMedian} ${inputUnit})`,
-                    data: dataPoints, // Data points now have x-values in the selected unit
+                    label: `Probability Density (Median = ${inputMedian} ${inputUnit}, σ_ln = ${SIGMA.toFixed(1)})`,
+                    data: dataPoints,
                     borderColor: 'rgba(0, 123, 255, 1)',
                     backgroundColor: 'rgba(0, 123, 255, 0.2)',
                     fill: true,
-                    tension: 0.4, // Smooth the curve
-                    pointRadius: 0 // Hide data points
+                    tension: 0.4,
+                    pointRadius: 0
                 }]
             },
             options: {
@@ -153,10 +148,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         position: 'bottom',
                         title: {
                             display: true,
-                            // Update x-axis title to reflect selected unit
                             text: `Completion Time (${inputUnit.charAt(0).toUpperCase() + inputUnit.slice(1)})`
                         },
-                        min: 0 // Ensure x-axis starts at 0
+                        min: 0
                     },
                     y: {
                         type: 'linear',
@@ -164,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             display: true,
                             text: 'Probability Density'
                         },
-                        min: 0 // Ensure y-axis starts at 0
+                        min: 0
                     }
                 },
                 plugins: {
@@ -175,7 +169,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                 if (label) {
                                     label += ': ';
                                 }
-                                // Tooltip shows time in the selected unit (context.parsed.x is already in that unit)
                                 label += `Time: ${context.parsed.x.toFixed(2)} ${inputUnit.toLowerCase()}, Density: ${context.parsed.y.toExponential(2)}`;
                                 return label;
                             }
@@ -185,33 +178,18 @@ document.addEventListener('DOMContentLoaded', () => {
                         annotations: {
                             medianLine: {
                                 type: 'line',
-                                // Annotation x-value should be in the selected unit
-                                xMin: convertFromHours(medianInHours, inputUnit),
-                                xMax: convertFromHours(medianInHours, inputUnit),
-                                borderColor: 'rgba(255, 99, 132, 0.8)',
+                                xMin: p50InUnit,
+                                xMax: p50InUnit,
+                                borderColor: 'rgba(255, 99, 132, 0.8)', // Red
                                 borderWidth: 2,
-                                // Annotation label shows median in the selected unit
                                 label: {
-                                    content: `Median (${convertFromHours(medianInHours, inputUnit).toFixed(2)} ${inputUnit.toLowerCase()})`,
+                                    content: `Median (P50: ${p50InUnit.toFixed(2)})`,
                                     enabled: true,
-                                    position: 'top'
-                                }
-                            },
-                             meanLine: {
-                                type: 'line',
-                                // Annotation x-value should be in the selected unit
-                                xMin: convertFromHours(meanInHours, inputUnit),
-                                xMax: convertFromHours(meanInHours, inputUnit),
-                                borderColor: 'rgba(255, 159, 64, 0.8)',
-                                borderWidth: 2,
-                                borderDash: [5, 5],
-                                // Annotation label shows mean in the selected unit
-                                label: {
-                                    content: `Mean (${convertFromHours(meanInHours, inputUnit).toFixed(2)} ${inputUnit.toLowerCase()})`,
-                                    enabled: true,
-                                    position: 'top'
+                                    position: 'top',
+                                    backgroundColor: 'rgba(255, 99, 132, 0.7)'
                                 }
                             }
+                            // Removed meanLine, p80Line, p90Line, p95Line, p99Line
                         }
                     }
                 }
@@ -219,7 +197,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Event listener for the button
     generateButton.addEventListener('click', () => {
         const inputMedian = parseFloat(estimateInput.value);
         const inputUnit = unitSelect.value;
@@ -230,20 +207,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const medianInHours = convertToHours(inputMedian, inputUnit);
-        // Pass the selected unit to generateGraphData
         const dataPoints = generateGraphData(medianInHours, inputUnit);
-        // Pass original input and unit to drawChart
         drawChart(dataPoints, medianInHours, inputMedian, inputUnit);
     });
 
-    // Generate initial graph on page load with default value (30 minutes)
+    // Initial graph generation on page load
     const initialInputMedian = parseFloat(estimateInput.value);
-    const initialInputUnit = unitSelect.value; // Get default unit
+    const initialInputUnit = unitSelect.value;
     if (!isNaN(initialInputMedian) && initialInputMedian > 0) {
          const initialMedianInHours = convertToHours(initialInputMedian, initialInputUnit);
-         // Pass the selected unit to generateGraphData for initial load
          const dataPoints = generateGraphData(initialMedianInHours, initialInputUnit);
-         // Pass original input and unit to drawChart for initial load
          drawChart(dataPoints, initialMedianInHours, initialInputMedian, initialInputUnit);
     }
 });
