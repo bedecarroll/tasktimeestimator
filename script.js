@@ -13,6 +13,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const p95Element = document.getElementById('p95Value');
     const p99Element = document.getElementById('p99Value');
 
+    // Register the annotation plugin if it is loaded
+    if (window['chartjs-plugin-annotation']) {
+        Chart.register(window['chartjs-plugin-annotation']);
+    }
 
     let logNormalChart; // Variable to hold the chart instance
 
